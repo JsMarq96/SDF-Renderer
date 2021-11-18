@@ -14,3 +14,13 @@ VolumetricNode::VolumetricNode() {
 void VolumetricNode::renderInMenu() {
 	SceneNode::renderInMenu();
 }
+
+
+SDFQuadNode::SDFQuadNode() {
+	mesh = new Mesh();
+	mesh->createQuad(0.0f, 0.0f, 2.0f, 2.0f, false);
+
+	material = new SDFMaterial();
+}
+
+void SDFQuadNode::renderInMenu() {}

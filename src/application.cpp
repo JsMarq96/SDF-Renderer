@@ -52,7 +52,7 @@ Application::Application(int window_width, int window_height, SDL_Window* window
 	// Scene setup
 	{
 		//VolumetricNode vol();
-		node_list.push_back(new VolumetricNode());
+		node_list.push_back(new SDFQuadNode());
 
 		// Light setup
 		scene_data.light.diffuse = Vector3{ 1.0f, 1.0f, 1.0f } * 0.5f;
@@ -85,13 +85,13 @@ void Application::render(void)
 	for (size_t i = 0; i < node_list.size(); i++) {
 		node_list[i]->render(camera);
 
-		if(render_wireframe)
-			node_list[i]->renderWireframe(camera);
+		//if(render_wireframe)
+		//	node_list[i]->renderWireframe(camera);
 	}
 
 	//Draw the floor grid
-	if(render_debug)
-		drawGrid();
+	//if(render_debug)
+	//	drawGrid();
 }
 
 void Application::update(double seconds_elapsed)
@@ -113,11 +113,11 @@ void Application::update(double seconds_elapsed)
 	}
 
 	//async input to move the camera around
-	if (Input::isKeyPressed(SDL_SCANCODE_LSHIFT)) speed *= 10; //move fast er with left shift
-	if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::isKeyPressed(SDL_SCANCODE_UP)) camera->move(Vector3(0.0f, 0.0f, 1.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::isKeyPressed(SDL_SCANCODE_DOWN)) camera->move(Vector3(0.0f, 0.0f,-1.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::isKeyPressed(SDL_SCANCODE_LEFT)) camera->move(Vector3(1.0f, 0.0f, 0.0f) * speed);
-	if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::isKeyPressed(SDL_SCANCODE_RIGHT)) camera->move(Vector3(-1.0f, 0.0f, 0.0f) * speed);
+	//if (Input::isKeyPressed(SDL_SCANCODE_LSHIFT)) speed *= 10; //move fast er with left shift
+	//if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::isKeyPressed(SDL_SCANCODE_UP)) camera->move(Vector3(0.0f, 0.0f, 1.0f) * speed);
+	//if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::isKeyPressed(SDL_SCANCODE_DOWN)) camera->move(Vector3(0.0f, 0.0f,-1.0f) * speed);
+	//if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::isKeyPressed(SDL_SCANCODE_LEFT)) camera->move(Vector3(1.0f, 0.0f, 0.0f) * speed);
+	//if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::isKeyPressed(SDL_SCANCODE_RIGHT)) camera->move(Vector3(-1.0f, 0.0f, 0.0f) * speed);
 	//if (Input::isKeyPressed(SDL_SCANCODE_SPACE)) camera->moveGlobal(Vector3(0.0f, -1.0f, 0.0f) * speed);
 	//if (Input::isKeyPressed(SDL_SCANCODE_LCTRL)) camera->moveGlobal(Vector3(0.0f,  1.0f, 0.0f) * speed);
 

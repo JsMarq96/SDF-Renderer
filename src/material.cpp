@@ -219,3 +219,16 @@ void VolumetricMaterial::renderInMenu() {
 	ImGui::SliderFloat("Isosurface threshold: ", &isosurf_threhold, 0.0001f, 1.0f);
 	ImGui::SliderFloat("Gradient delta: ", &gradient_delta, 0.0001f, 0.1f);
 }
+
+
+
+// SDF methods
+SDFMaterial::SDFMaterial() {
+	shader = Shader::Get("data/shaders/sdf.vs", "data/shaders/sdf.fs");
+}
+
+void SDFMaterial::setUniforms(Camera* camera, Matrix44 model) {
+	
+}
+
+void SDFMaterial::renderInMenu() {}

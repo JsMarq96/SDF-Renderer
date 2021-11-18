@@ -24,7 +24,14 @@ public:
 	VolumetricNode();
 
 	void renderInMenu();
-	
+};
+
+
+class SDFQuadNode : public SceneNode {
+public:
+	SDFQuadNode();
+
+	void renderInMenu();
 };
 
 #endif

@@ -113,4 +113,13 @@ public:
 	void renderInMenu();
 };
 
+
+class SDFMaterial : public StandardMaterial {
+public:
+	SDFMaterial();
+
+	void setUniforms(Camera* camera, Matrix44 model);
+
+	void renderInMenu();
+};
 #endif
