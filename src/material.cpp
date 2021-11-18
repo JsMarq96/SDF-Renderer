@@ -228,7 +228,7 @@ SDFMaterial::SDFMaterial() {
 }
 
 void SDFMaterial::setUniforms(Camera* camera, Matrix44 model) {
-	
+	shader->setUniform("u_aspect_ratio", Vector2(Application::instance->window_width, Application::instance->window_height));
 }
 
 void SDFMaterial::renderInMenu() {}

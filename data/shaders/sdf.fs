@@ -1,5 +1,6 @@
 uniform vec3 u_camera_position;
 uniform vec4 u_color;
+uniform vec2 u_aspect_ratio;
 
 varying vec3 v_local_cam_pos;
 varying vec2 v_uv;
@@ -46,7 +47,21 @@ vec4 render_volume() {
 	return final_color;
 }*/
 
+vec3 sdfCircle(vec2 uv, float r) {
+    float x = uv.x;
+    float y = uv.y;
+    
+    float d = length(vec2(x, y)) - r;
+    
+    return d > 0. ? vec3(1.) : vec3(0., 0., 1.);
+}
 
 void main(){
-	gl_FragColor = vec4(v_uv, 1.0, 1.0);
+	// Centering the UV coordinates while keeping the aspect ratio
+	vec2 uv = v_uv;
+	uv -= 0.5;
+	uv.x *= u_aspect_ratio.x / u_aspect_ratio.y;
+
+  // Output to screen
+  	gl_FragColor = vec4(sdfCircle(uv, 0.2),1.0);
 }
