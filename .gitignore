@@ -1,0 +1,7 @@
+﻿framework.exe
+framework_debug.exe
+imgui.ini
+framework_debug.pdb
+visualstudio15/.vs
+visualstudio15/VS2015/Release
+visualstudio15/VS2015/Debug
