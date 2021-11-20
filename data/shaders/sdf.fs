@@ -5,63 +5,100 @@ uniform vec2 u_aspect_ratio;
 varying vec3 v_local_cam_pos;
 varying vec2 v_uv;
 
-// ======================================
-// RENDER VAINILLA VOLUMES
-// ======================================
-/*
-vec4 render_volume() {
-	vec3 ray_dir = normalize(v_local_cam_pos - v_position);
-    vec4 final_color = vec4(0.0);
 
+float sdfCircle(vec3 point, vec3 center, float r) {    
+    return length(center - point) - r;
+}
+
+float sdfUnion(float dist1, float dist2) {
+	return min(dist1, dist2);
+}
+
+float sdfSmoothUnion(float d1, float d2, float k) {
+    float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) - k*h*(1.0-h); 
+}
+
+float sdfHorizontalPlane(vec3 point, float depth) {
+	return point.y - depth;
+}
+
+float scene(vec3 position) {
+	float dist = 1000.0;
+
+	/*dist = sdfUnion(dist, sdfCircle(position, vec3(0.1, 0.0, 0.5), 0.50));
+
+	dist = sdfUnion(dist, sdfCircle(position, vec3(0.9, 0.0, 1.0), 0.250));*/
+
+	dist = sdfSmoothUnion(sdfCircle(position, vec3(0.1, 0.0, 0.5), 0.50), 
+						  sdfCircle(position, vec3(0.9, 0.0, 1.0), 0.250),
+						  0.5);
+
+	dist = sdfSmoothUnion(dist, sdfHorizontalPlane(position, -0.25), 0.4);
+
+	return dist;
+}
+
+vec3 gradient(float h, vec3 coords) {
+	vec3 r = vec3(0.0);
+	float grad_x = scene(vec3(coords.x + h, coords.y, coords.z)) - 
+				   scene(vec3(coords.x - h, coords.y, coords.z));
+
+	float grad_y = scene(vec3(coords.x, coords.y + h, coords.z)) - 
+				   scene(vec3(coords.x, coords.y - h, coords.z));
+	
+	float grad_z = scene(vec3(coords.x, coords.y, coords.z + h)) - 
+				   scene(vec3(coords.x, coords.y, coords.z - h));
+	
+	return normalize(vec3(grad_x, grad_y, grad_z)  /  (h * 2));
+}
+
+
+vec3 phong(vec3 position) {
+	vec3 grad = gradient(0.01, position);
+
+	vec3 l = normalize( vec3(-0.9, 3.0, 3.0) - position );
+	vec3 r = normalize(reflect(-l, grad));
+    vec3 v = normalize(position);
+	float reflect_dot_view = clamp(dot(r, v), 0.0, 1.0);
+
+	vec3 specular = pow(reflect_dot_view, 64.0) * vec3(1.0);
+
+	vec3 diff = vec3(0.5) * clamp( dot(l, grad), 0.0, 1.0);
+
+	return specular + diff + vec3(0.07);
+}
+
+
+vec4 spheremarch(vec3 start_pos, vec3 ray_dir) {
     vec3 it_position = vec3(0.0);
 
-	// Add noise to aboud jitter
-	float noise_sample = normalize(texture(u_noise_tex, gl_FragCoord.xy / 1.0)).r;
-	it_position = it_position + (noise_sample * ray_dir);
-
 	// Ray loop
-	for(int i = 0; i < MAX_ITERATIONS; i++){
-		vec3 sample_position = ((v_position - it_position) / 2.0) + 0.5;
+	for(int i = 0; i < 100; i++){
+		vec3 sample_position = start_pos + it_position;
 
-		if (sample_position.x < 0.0 && sample_position.y < 0.0 && sample_position.z < 0.0) {
-			break;
-		}
-		if (sample_position.x > 1.0 && sample_position.y > 1.0 && sample_position.z > 1.0) {
-			break;
-		}
+		float min_length = scene(sample_position);
 
-		if (final_color.a == 1.0) {
-			break;
-		}
-		
-        float depth = texture3D(u_texture, sample_position).x;
-
-		vec4 sample_color = vec4(depth, depth, depth, depth);
-		//vec4 sample_color = vec4(depth, 1.0 - depth, 0.0, depth * depth);
-
-		final_color = final_color + (u_step_size * (1.0 - final_color.a) * sample_color);
-
-        it_position = it_position + (ray_dir * u_step_size);
+		if (min_length < 0.01) {
+			// HIT!!
+			return vec4(phong(sample_position), 1.0);
+			return vec4(1.0);
+		} 
+		// Iterate
+		it_position = it_position + (ray_dir * min_length);
 	}
 
-	return final_color;
-}*/
-
-vec3 sdfCircle(vec2 uv, float r) {
-    float x = uv.x;
-    float y = uv.y;
-    
-    float d = length(vec2(x, y)) - r;
-    
-    return d > 0. ? vec3(1.) : vec3(0., 0., 1.);
+	return vec4(0.0);
 }
 
 void main(){
 	// Centering the UV coordinates while keeping the aspect ratio
-	vec2 uv = v_uv;
-	uv -= 0.5;
+	vec2 uv = v_uv - 0.5;
 	uv.x *= u_aspect_ratio.x / u_aspect_ratio.y;
 
+	vec3 ray_origin = vec3(0.0, 0.0, 3.0);
+	vec3 ray_direction = normalize(vec3(uv, -1));
+
   // Output to screen
-  	gl_FragColor = vec4(sdfCircle(uv, 0.2),1.0);
+  	gl_FragColor = vec4(spheremarch(ray_origin, ray_direction));
 }
