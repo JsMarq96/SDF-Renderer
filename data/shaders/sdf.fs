@@ -31,7 +31,7 @@ float scene(vec3 position) {
 	dist = sdfUnion(dist, sdfCircle(position, vec3(0.9, 0.0, 1.0), 0.250));*/
 
 	dist = sdfSmoothUnion(sdfCircle(position, vec3(0.1, 0.0, 0.5), 0.50), 
-						  sdfCircle(position, vec3(0.9, 0.0, 1.0), 0.250),
+						  sdfCircle(position, vec3(0.9, 0.0, 0.8), 0.250),
 						  0.5);
 
 	dist = sdfSmoothUnion(dist, sdfHorizontalPlane(position, -0.25), 0.4);
@@ -55,7 +55,7 @@ vec3 gradient(float h, vec3 coords) {
 
 
 vec3 phong(vec3 position) {
-	vec3 grad = gradient(0.01, position);
+	vec3 grad = gradient(0.0001, position);
 
 	vec3 l = normalize( vec3(-0.9, 3.0, 3.0) - position );
 	vec3 r = normalize(reflect(-l, grad));
@@ -81,6 +81,7 @@ vec4 spheremarch(vec3 start_pos, vec3 ray_dir) {
 
 		if (min_length < 0.01) {
 			// HIT!!
+			//return vec4(gradient(0.0001, sample_position), 1.0);
 			return vec4(phong(sample_position), 1.0);
 			return vec4(1.0);
 		} 
