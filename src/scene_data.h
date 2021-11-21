@@ -14,5 +14,7 @@ struct sSceneData {
 	} light;
 	
 	Texture* enviorment_cubemap = NULL;
+
+	float camera_rotation = 1.0f;
 };
 #endif

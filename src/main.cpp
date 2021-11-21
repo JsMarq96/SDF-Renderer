@@ -104,6 +104,7 @@ void renderGUI(SDL_Window* window, Application * game)
 		ImGui::Text(getGPUStats().c_str());					   // Display some text (you can use a format strings too)
 		
 		if (ImGui::TreeNode("Scene")) {
+			ImGui::SliderFloat("Camera rotation", &scene_data.camera_rotation, -1.0f, 1.0f);
 			ImGui::DragFloat3("Light Position", (float*)&scene_data.light.position);
 			ImGui::ColorEdit3("Light Color", (float*)&scene_data.light.color);
 			ImGui::ColorEdit3("Light Ambient", (float*)&(scene_data.light.ambient), 0.0f);

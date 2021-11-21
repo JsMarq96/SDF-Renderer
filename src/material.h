@@ -118,6 +118,8 @@ class SDFMaterial : public StandardMaterial {
 public:
 	SDFMaterial();
 
+	float cam_rotation = 10.0f;
+
 	void setUniforms(Camera* camera, Matrix44 model);
 
 	void renderInMenu();
