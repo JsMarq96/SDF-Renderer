@@ -2,9 +2,57 @@ uniform vec3 u_camera_position;
 uniform vec4 u_color;
 uniform vec2 u_aspect_ratio;
 uniform float u_cam_rotation;
+uniform float u_time;
+
+uniform sampler2D u_noise;
 
 varying vec3 v_local_cam_pos;
 varying vec2 v_uv;
+
+// ====================================
+//  FBM NOISE FUNCS
+// ====================================
+
+float noise( in vec3 x ) {
+	return texture(u_noise, vec2(x.x, x.z) / 8.0);
+}
+
+const mat3 m3  = mat3( 0.00,  0.80,  0.60,
+                      -0.80,  0.36, -0.48,
+                      -0.60, -0.48,  0.64 );
+
+// Taken from Inigo Quilez's Rainforest ShaderToy:
+// https://www.shadertoy.com/view/4ttSWf
+float fbm_4( in vec3 x )
+{
+    float f = 2.0;
+    float s = 0.5;
+    float a = 0.0;
+    float b = 0.5;
+    for( int i=0; i<4; i++ )
+    {
+        float n = noise(x);
+        a += b*n;
+        b *= s;
+        x = f*m3*x;
+    }
+	return a;
+}
+
+/**
+float QueryVolumetricDistanceField( in vec3 pos)
+{    
+    // Fuse a bunch of spheres, slap on some fbm noise, 
+    // merge it with ground plane to get some ground fog 
+    // and viola! Big cloudy thingy!
+    vec3 fbmCoord = (pos + 2.0 * vec3(iTime, 0.0, iTime)) / 1.5f;
+    float sdfValue = sdSphere(pos, vec3(-8.0, 2.0 + 20.0 * sin(iTime), -1), 5.6);
+    sdfValue = sdSmoothUnion(sdfValue,sdSphere(pos, vec3(8.0, 8.0 + 12.0 * cos(iTime), 3), 5.6), 3.0f);
+    sdfValue = sdSmoothUnion(sdfValue, sdSphere(pos, vec3(5.0 * sin(iTime), 3.0, 0), 8.0), 3.0) + 7.0 * fbm_4(fbmCoord / 3.2);
+    sdfValue = sdSmoothUnion(sdfValue, sdPlane(pos + vec3(0, 0.4, 0)), 22.0);
+    return sdfValue;
+}
+*/
 
 // ====================================
 //  PRIMITIVES
@@ -53,14 +101,20 @@ vec4 scene(vec3 position) {
 	// BIggest distance, black color
 	vec4 dist = vec4(1000.0, 0.0, 0.0, 0.0);
 
+	// Figure 1
+	vec3 pos = vec3(0.6 - cos(u_time) - 1.0, 0.3, 0.2);
+	vec4 moving_ball_sdf = sdfCircle(position, 
+						  				  pos, 
+										  0.20, 
+										  vec3(0.0, 1.0, 0.0));
+
+	//moving_ball_sdf.x -=  fbm_4(position) * 0.25;
+
 	vec4 objs = opSmoothUnion(sdfCircle(position, 
 										vec3(0.0, 0.0, 0.0), 
 										0.50, 
 										vec3(1.0, 0.0, 0.0)), 
-						  	sdfCircle(position, 
-						  				vec3(0.6, 0.3, 0.2), 
-										  0.20, 
-										  vec3(0.0, 1.0, 0.0)),
+						  	moving_ball_sdf, 
 						  	0.5);
 
 	objs = opSmoothUnion(objs, sdfHorizontalPlane(position, 
@@ -70,8 +124,13 @@ vec4 scene(vec3 position) {
 
 	dist = opUnion(dist, objs);
 
+	vec3 subs_pos = vec3(1.0, 1.5, 1.0- cos(u_time) * 0.5);
+	vec4 sdf_moving_circle = sdfCircle(position, subs_pos, 0.5, vec3(0.0));
+
+	sdf_moving_circle.x -=  fbm_4(position) * 0.50;
+
 	dist = opUnion(dist, opSubstraction( sdfBox(position, vec3(1.0, 1.0, 1.0), vec3(1.0, 1.0, 1.0) / 3.0, vec3(1.0, 1.0, 0.0)), 
-										 sdfCircle(position, vec3(1.0, 1.5, 1.0), 0.5, vec3(0.0))));
+										 sdf_moving_circle));
 
 	return dist;
 }

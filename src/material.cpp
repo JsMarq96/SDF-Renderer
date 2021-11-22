@@ -225,9 +225,15 @@ void VolumetricMaterial::renderInMenu() {
 // SDF methods
 SDFMaterial::SDFMaterial() {
 	shader = Shader::Get("data/shaders/sdf.vs", "data/shaders/sdf.fs");
+
+	noise_func = Texture::Get("data/noiseTexture.png");
 }
 
 void SDFMaterial::setUniforms(Camera* camera, Matrix44 model) {
+		
+	shader->setTexture("u_noise", noise_func);
+
+	shader->setUniform("u_time", Application::instance->time);
 	shader->setUniform("u_cam_rotation", scene_data.camera_rotation);
 	shader->setUniform("u_aspect_ratio", Vector2(Application::instance->window_width, Application::instance->window_height));
 }

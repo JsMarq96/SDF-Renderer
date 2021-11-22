@@ -116,6 +116,8 @@ public:
 
 class SDFMaterial : public StandardMaterial {
 public:
+	Texture* noise_func;
+
 	SDFMaterial();
 
 	float cam_rotation = 10.0f;
