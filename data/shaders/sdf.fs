@@ -66,13 +66,6 @@ vec4 opUnion(vec4 dist1, vec4 dist2) {
 	return dist2;
 }
 
-vec4 opUnion1(vec4 dist1, vec4 dist2) {
-	if (dist1.x < dist2.x) {
-		return dist1;
-	}
-	return dist2;
-}
-
 vec4 opSubstraction(vec4 dist1, vec4 dist2) {
 	return vec4(max(-dist2.x, dist1.x), dist1.yzw);
 }
