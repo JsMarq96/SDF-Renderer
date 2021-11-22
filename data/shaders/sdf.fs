@@ -53,20 +53,22 @@ vec4 scene(vec3 position) {
 	// BIggest distance, black color
 	vec4 dist = vec4(1000.0, 0.0, 0.0, 0.0);
 
-	dist = opSmoothUnion(sdfCircle(position, 
-									vec3(0.0, 0.0, 0.0), 
-									0.50, 
-									vec3(1.0, 0.0, 0.0)), 
-						  sdfCircle(position, 
-						  			vec3(0.6, 0.3, 0.2), 
-									  0.20, 
-									  vec3(0.0, 1.0, 0.0)),
-						  0.5);
+	vec4 objs = opSmoothUnion(sdfCircle(position, 
+										vec3(0.0, 0.0, 0.0), 
+										0.50, 
+										vec3(1.0, 0.0, 0.0)), 
+						  	sdfCircle(position, 
+						  				vec3(0.6, 0.3, 0.2), 
+										  0.20, 
+										  vec3(0.0, 1.0, 0.0)),
+						  	0.5);
 
-	dist = opSmoothUnion(dist, sdfHorizontalPlane(position, 
+	objs = opSmoothUnion(objs, sdfHorizontalPlane(position, 
 													-0.25, 
 													vec3(0.0, 0.0, 1.0)), 
 						 0.5);
+
+	dist = opUnion(dist, objs);
 
 	dist = opUnion(dist, opSubstraction( sdfBox(position, vec3(1.0, 1.0, 1.0), vec3(1.0, 1.0, 1.0) / 3.0, vec3(1.0, 1.0, 0.0)), 
 										 sdfCircle(position, vec3(1.0, 1.5, 1.0), 0.5, vec3(0.0))));
