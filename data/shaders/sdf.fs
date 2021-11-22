@@ -39,21 +39,6 @@ float fbm_4( in vec3 x )
 	return a;
 }
 
-/**
-float QueryVolumetricDistanceField( in vec3 pos)
-{    
-    // Fuse a bunch of spheres, slap on some fbm noise, 
-    // merge it with ground plane to get some ground fog 
-    // and viola! Big cloudy thingy!
-    vec3 fbmCoord = (pos + 2.0 * vec3(iTime, 0.0, iTime)) / 1.5f;
-    float sdfValue = sdSphere(pos, vec3(-8.0, 2.0 + 20.0 * sin(iTime), -1), 5.6);
-    sdfValue = sdSmoothUnion(sdfValue,sdSphere(pos, vec3(8.0, 8.0 + 12.0 * cos(iTime), 3), 5.6), 3.0f);
-    sdfValue = sdSmoothUnion(sdfValue, sdSphere(pos, vec3(5.0 * sin(iTime), 3.0, 0), 8.0), 3.0) + 7.0 * fbm_4(fbmCoord / 3.2);
-    sdfValue = sdSmoothUnion(sdfValue, sdPlane(pos + vec3(0, 0.4, 0)), 22.0);
-    return sdfValue;
-}
-*/
-
 // ====================================
 //  PRIMITIVES
 // ====================================
@@ -62,7 +47,7 @@ vec4 sdfBox(vec3 point, vec3 position, vec3 b, vec3 color) {
   return vec4(length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0), color);
 }
 
-vec4 sdfCircle(vec3 point, vec3 center, float r, vec3 color) {    
+vec4 sdfSphere(vec3 point, vec3 center, float r, vec3 color) {    
     return vec4(length(center - point) - r, color);
 }
 
@@ -81,15 +66,19 @@ vec4 opUnion(vec4 dist1, vec4 dist2) {
 	return dist2;
 }
 
+vec4 opUnion1(vec4 dist1, vec4 dist2) {
+	if (dist1.x < dist2.x) {
+		return dist1;
+	}
+	return dist2;
+}
+
 vec4 opSubstraction(vec4 dist1, vec4 dist2) {
 	return vec4(max(-dist2.x, dist1.x), dist1.yzw);
 }
 
 vec4 opIntersection(vec4 dist1, vec4 dist2) {
-	if (dist1.x > dist2.x) {
-		return dist1;
-	}
-	return dist2;
+	return vec4(max(dist2.x, dist1.x), dist1.yzw);
 }
 
 vec4 opSmoothUnion(vec4 d1, vec4 d2, float k) {
@@ -101,16 +90,14 @@ vec4 scene(vec3 position) {
 	// BIggest distance, black color
 	vec4 dist = vec4(1000.0, 0.0, 0.0, 0.0);
 
-	// Figure 1
+	// Smooth union test
 	vec3 pos = vec3(0.6 - cos(u_time) - 1.0, 0.3, 0.2);
-	vec4 moving_ball_sdf = sdfCircle(position, 
+	vec4 moving_ball_sdf = sdfSphere(position, 
 						  				  pos, 
 										  0.20, 
 										  vec3(0.0, 1.0, 0.0));
 
-	//moving_ball_sdf.x -=  fbm_4(position) * 0.25;
-
-	vec4 objs = opSmoothUnion(sdfCircle(position, 
+	vec4 objs = opSmoothUnion(sdfSphere(position, 
 										vec3(0.0, 0.0, 0.0), 
 										0.50, 
 										vec3(1.0, 0.0, 0.0)), 
@@ -124,13 +111,20 @@ vec4 scene(vec3 position) {
 
 	dist = opUnion(dist, objs);
 
-	vec3 subs_pos = vec3(1.0, 1.5, 1.0- cos(u_time) * 0.5);
-	vec4 sdf_moving_circle = sdfCircle(position, subs_pos, 0.5, vec3(0.0));
+	// Substraction + noise test
+	vec3 subs_pos = vec3(1.0, 1.5, 1.0 - cos(u_time) * 0.5);
+	vec4 sdf_moving_circle = sdfSphere(position, subs_pos, 0.5, vec3(0.0));
 
 	sdf_moving_circle.x -=  fbm_4(position) * 0.50;
 
 	dist = opUnion(dist, opSubstraction( sdfBox(position, vec3(1.0, 1.0, 1.0), vec3(1.0, 1.0, 1.0) / 3.0, vec3(1.0, 1.0, 0.0)), 
 										 sdf_moving_circle));
+
+	// Intersection test
+	vec4 pos1 = sdfBox(position, vec3(-2.0, 0.3, 0.2), vec3(0.5, 0.25, 0.5), vec3(1.0, 1.0, 0.0));
+	vec4 pos2 = sdfSphere(position, vec3(-1.6, 0.4 + cos(u_time)*0.25, 0.2), 0.2, vec3(1.0, 1.0, 1.0));;
+
+	dist = opUnion(dist, opIntersection(pos1, pos2));
 
 	return dist;
 }
@@ -182,7 +176,6 @@ vec4 spheremarch(vec3 start_pos, vec3 ray_dir) {
 
 		if (min_length.x < 0.001) {
 			// HIT!!
-			//return vec4(gradient(0.0001, sample_position), 1.0);
 			return vec4(phong(sample_position) * min_length.yzw, 1.0);
 			return vec4(1.0);
 		} 
