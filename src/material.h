@@ -122,6 +122,10 @@ public:
 
 	float cam_rotation = 10.0f;
 
+	float noise_magnitude = 1.0f;
+
+	Vector3 red_spehre_pos = { 0.0f, 0.0f, 0.f };
+
 	void setUniforms(Camera* camera, Matrix44 model);
 
 	void renderInMenu();

@@ -3,6 +3,9 @@ uniform vec4 u_color;
 uniform vec2 u_aspect_ratio;
 uniform float u_cam_rotation;
 uniform float u_time;
+uniform float u_noise_mag;
+
+uniform vec3 u_red_sphere_position_delta;
 
 uniform sampler2D u_noise;
 
@@ -83,7 +86,7 @@ vec4 opNoisyDisplacement(vec3 position, vec4 dist1, float scale) {
 	return vec4(dist1.x + fbm_4(position) * scale, dist1.yzw);
 }
 
-vec4 scene(vec3 position) {
+vec4 sdfScene(vec3 position) {
 	// BIggest distance, black color
 	vec4 dist = vec4(1000.0, 0.0, 0.0, 0.0);
 
@@ -95,7 +98,7 @@ vec4 scene(vec3 position) {
 										  vec3(0.0, 1.0, 0.0));
 
 	vec4 objs = opSmoothUnion(sdfSphere(position, 
-										vec3(0.0, 0.0, 0.0), 
+										vec3(0.0, 0.0, 0.0) + u_red_sphere_position_delta, 
 										0.50, 
 										vec3(1.0, 0.0, 0.0)), 
 						  	moving_ball_sdf, 
@@ -112,9 +115,7 @@ vec4 scene(vec3 position) {
 	vec3 subs_pos = vec3(1.0, 1.5, 1.0 - cos(u_time) * 0.5);
 	vec4 sdf_moving_circle = sdfSphere(position, subs_pos, 0.5, vec3(0.0));
 
-	//sdf_moving_circle.x -=  fbm_4(position) * 0.50;
-
-	sdf_moving_circle = opNoisyDisplacement(position, sdf_moving_circle, -0.5);
+	sdf_moving_circle = opNoisyDisplacement(position, sdf_moving_circle, -0.5 * u_noise_mag);
 
 	dist = opUnion(dist, opSubstraction( sdfBox(position, vec3(1.0, 1.0, 1.0), vec3(1.0, 1.0, 1.0) / 3.0, vec3(1.0, 1.0, 0.0)), 
 										 sdf_moving_circle));
@@ -134,14 +135,14 @@ vec4 scene(vec3 position) {
 // ====================================
 vec3 gradient(float h, vec3 coords) {
 	vec3 r = vec3(0.0);
-	float grad_x = scene(vec3(coords.x + h, coords.y, coords.z)).x - 
-				   scene(vec3(coords.x - h, coords.y, coords.z)).x;
+	float grad_x = sdfScene(vec3(coords.x + h, coords.y, coords.z)).x - 
+				   sdfScene(vec3(coords.x - h, coords.y, coords.z)).x;
 
-	float grad_y = scene(vec3(coords.x, coords.y + h, coords.z)).x - 
-				   scene(vec3(coords.x, coords.y - h, coords.z)).x;
+	float grad_y = sdfScene(vec3(coords.x, coords.y + h, coords.z)).x - 
+				   sdfScene(vec3(coords.x, coords.y - h, coords.z)).x;
 	
-	float grad_z = scene(vec3(coords.x, coords.y, coords.z + h)).x - 
-				   scene(vec3(coords.x, coords.y, coords.z - h)).x;
+	float grad_z = sdfScene(vec3(coords.x, coords.y, coords.z + h)).x - 
+				   sdfScene(vec3(coords.x, coords.y, coords.z - h)).x;
 	
 	return normalize(vec3(grad_x, grad_y, grad_z)  /  (h * 2));
 }
@@ -171,7 +172,7 @@ vec4 spheremarch(vec3 start_pos, vec3 ray_dir) {
 	for(int i = 0; i < 100; i++){
 		vec3 sample_position = start_pos + it_position;
 
-		vec4 min_length = scene(sample_position);
+		vec4 min_length = sdfScene(sample_position);
 
 		if (min_length.x < 0.001) {
 			// HIT!!

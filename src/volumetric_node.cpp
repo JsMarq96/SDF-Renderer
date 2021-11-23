@@ -21,6 +21,9 @@ SDFQuadNode::SDFQuadNode() {
 	mesh->createQuad(0.0f, 0.0f, 2.0f, 2.0f, false);
 
 	material = new SDFMaterial();
+	name = "SDFs";
 }
 
-void SDFQuadNode::renderInMenu() {}
+void SDFQuadNode::renderInMenu() {
+	SceneNode::renderInMenu();
+}

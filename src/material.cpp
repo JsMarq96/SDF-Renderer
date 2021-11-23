@@ -232,12 +232,16 @@ SDFMaterial::SDFMaterial() {
 void SDFMaterial::setUniforms(Camera* camera, Matrix44 model) {
 		
 	shader->setTexture("u_noise", noise_func);
-
+	shader->setUniform("u_noise_mag", noise_magnitude);
+	shader->setUniform("u_red_sphere_position_delta", red_spehre_pos);
 	shader->setUniform("u_time", Application::instance->time);
 	shader->setUniform("u_cam_rotation", scene_data.camera_rotation);
 	shader->setUniform("u_aspect_ratio", Vector2(Application::instance->window_width, Application::instance->window_height));
 }
 
 void SDFMaterial::renderInMenu() {
-
+	ImGui::SliderFloat("Red Sphere Pos x: ", &red_spehre_pos.x, -1.0f, 1.0f);
+	ImGui::SliderFloat("Red Sphere Pos y: ", &red_spehre_pos.y, -1.0f, 1.0f);
+	ImGui::SliderFloat("Red Sphere Pos z: ", &red_spehre_pos.z, -1.0f, 1.0f);
+	ImGui::SliderFloat("Noise magnitude: ", &noise_magnitude, -2.0f, 4.0f);
 }
