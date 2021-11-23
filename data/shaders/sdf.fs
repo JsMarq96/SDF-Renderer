@@ -79,6 +79,10 @@ vec4 opSmoothUnion(vec4 d1, vec4 d2, float k) {
     return vec4(mix( d2.x, d1.x, h ) - k*h*(1.0-h), mix(d2.yzw, d1.yzw, h)); 
 }
 
+vec4 opNoisyDisplacement(vec3 position, vec4 dist1, float scale) {
+	return vec4(dist1.x + fbm_4(position) * scale, dist1.yzw);
+}
+
 vec4 scene(vec3 position) {
 	// BIggest distance, black color
 	vec4 dist = vec4(1000.0, 0.0, 0.0, 0.0);
@@ -108,7 +112,9 @@ vec4 scene(vec3 position) {
 	vec3 subs_pos = vec3(1.0, 1.5, 1.0 - cos(u_time) * 0.5);
 	vec4 sdf_moving_circle = sdfSphere(position, subs_pos, 0.5, vec3(0.0));
 
-	sdf_moving_circle.x -=  fbm_4(position) * 0.50;
+	//sdf_moving_circle.x -=  fbm_4(position) * 0.50;
+
+	sdf_moving_circle = opNoisyDisplacement(position, sdf_moving_circle, -0.5);
 
 	dist = opUnion(dist, opSubstraction( sdfBox(position, vec3(1.0, 1.0, 1.0), vec3(1.0, 1.0, 1.0) / 3.0, vec3(1.0, 1.0, 0.0)), 
 										 sdf_moving_circle));
